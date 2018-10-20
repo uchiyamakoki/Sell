@@ -1,10 +1,12 @@
 package com.sn.sell.dataobject;
 
 import lombok.Data;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Entity
 @Data
@@ -28,6 +30,7 @@ public class OrderDetail {
     private Integer productQuantity;
 
     /*商品小图*/
-    private String productIocn;
+    private String productIcon;
+
 
 }
