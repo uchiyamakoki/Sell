@@ -5,6 +5,8 @@ import com.sn.sell.dataobject.OrderMaster;
 import com.sn.sell.dataobject.ProductInfo;
 import com.sn.sell.dto.CartDTO;
 import com.sn.sell.dto.OrderDTO;
+import com.sn.sell.enums.OrderStatusEnum;
+import com.sn.sell.enums.PayStatusEnum;
 import com.sn.sell.enums.ResultEnum;
 import com.sn.sell.exception.SellException;
 import com.sn.sell.repository.OrderDetailRepository;
@@ -42,14 +44,14 @@ public class OrderServiceImpl implements OrderService{
         BigDecimal orderAmount=new BigDecimal(BigInteger.ZERO);
 
         List<CartDTO> cartDTOList=new ArrayList<CartDTO>();
-        //1.查询商品(数量，价格)
+        //1.查询商品(数量，价格) 先查出只有id和数量吧应该 所以要从查出来的productInfo里找
         for(OrderDetail orderDetail:orderDTO.getOrderDetailList()){
             ProductInfo productInfo=productService.findOne(orderDetail.getProductId());
             if (productInfo==null){
                 throw new SellException(ResultEnum.PRODUCT_NOT_EXIST);
             }
             //2.计算总价
-            orderAmount=orderDetail.getProductPrice()
+            orderAmount=productInfo.getProductPrice()
                     .multiply(new BigDecimal(orderDetail.getProductQuantity()))
                     .add(orderAmount);
             //订单详情入库
@@ -66,9 +68,12 @@ public class OrderServiceImpl implements OrderService{
 
         //3.写入订单数据库(orderMaster和orderDetail)
         OrderMaster orderMaster=new OrderMaster();
-        orderMaster.setOrderId(orderId);
-        orderMaster.setOrderAmount(orderAmount);
         BeanUtils.copyProperties(orderDTO,orderMaster);
+        orderMaster.setOrderId(orderId);
+        orderMaster.setOrderStatus(OrderStatusEnum.NEW.getCode());
+        orderMaster.setPayStatus(PayStatusEnum.WAIT.getCode());
+        orderMaster.setOrderAmount(orderAmount);
+
         orderMasterRepository.save(orderMaster);
 
         //4.扣库存
